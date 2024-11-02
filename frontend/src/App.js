@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import "./App.css"
 import ReactLoading from "react-loading";
-const socket = io('http://localhost:3500');
+// const socket = io('http://localhost:3500');
+const socket = io('https://govtechtaaet-swe-linuschui-1.onrender.com/');
 
 const App = () => {
 	// PLAYER DETAILS
@@ -14,7 +15,7 @@ const App = () => {
     const [board, setBoard] = useState(Array(9).fill(null));
 	const [playerSymbol, setPlayerSymbol] = useState("");
 	const [currentSymbol, setCurrentSymbol] = useState("X");
-	const [winner, setWinner] = useState(null);
+	const [winner, setWinner] = useState(false);
 	const [disconnect, setDisconnect] = useState(false);
 	const positions = [
 		"top left", "top middle", "top right",
@@ -41,7 +42,7 @@ const App = () => {
 			announceHelperMessage(data.message);
             setIsGameStarted(true);
             setIsWaiting(false);
-			setWinner(null); 
+			setWinner(false); 
         });
 
         socket.on('gameState', (game) => {
@@ -63,7 +64,7 @@ const App = () => {
 
         socket.on('gameEnd', ({ winner }) => {
 			const endMessage = winner ? `Player ${winner} has won! Congratulations!` : "No one won, it's a tie!";
-			setWinner(winner);
+			setWinner(true);
 			setMessage(endMessage);
 			announceHelperMessage(endMessage);
         });
