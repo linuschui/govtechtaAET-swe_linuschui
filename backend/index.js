@@ -12,7 +12,11 @@ const bodyParser = require("body-parser");
 app.use(bodyParser.json());
 // CORS
 const cors = require("cors");
-app.use(cors());
+app.use(cors({
+    origin: 'https://govtechtaaet-swe-linuschui.onrender.com/',
+    methods: ['GET', 'POST'],
+    credentials: true,
+}));
 // DB
 const mysql = require("mysql2");
 const db = mysql.createConnection({
@@ -32,11 +36,21 @@ db.connect((err) => {
 const { Server } = require("socket.io")
 const http = require('http');
 const server = http.createServer(app);
+const allowedOrigins = [
+    "https://govtechtaaet-swe-linuschui.onrender.com",
+    "http://localhost:3000",
+];
 const io = new Server(server, {
-	cors: {
-		origin: "http://localhost:3000",
-		methods: ["GET", "POST"]
-	}
+    cors: {
+        origin: (origin, callback) => {
+            if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+                callback(null, true);
+            } else {
+                callback(new Error('Not allowed by CORS'));
+            }
+        },
+        methods: ["GET", "POST"]
+    }
 });
 
 // STORE SESSIONS
