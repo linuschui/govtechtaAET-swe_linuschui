@@ -15,6 +15,7 @@ const App = () => {
 	const [playerSymbol, setPlayerSymbol] = useState("");
 	const [currentSymbol, setCurrentSymbol] = useState("X");
 	const [winner, setWinner] = useState(null);
+	const [disconnect, setDisconnect] = useState(false);
 	const positions = [
 		"top left", "top middle", "top right",
 		"middle left", "middle middle", "middle right",
@@ -54,12 +55,29 @@ const App = () => {
 			announceHelperMessage(data.message);
 		});
 
+		socket.on('opponentDisconnect', (data) => {
+			setHelperMessage(data.message);
+			announceHelperMessage(data.message);
+			setDisconnect(true);
+		})
+
         socket.on('gameEnd', ({ winner }) => {
 			const endMessage = winner ? `Player ${winner} has won! Congratulations!` : "No one won, it's a tie!";
 			setWinner(winner);
 			setMessage(endMessage);
 			announceHelperMessage(endMessage);
         });
+
+		socket.on('invalidGame', (data) => {
+			setMessage("Invalid game ID. Please try again.");
+			announceHelperMessage("Invalid game ID. Please try again.");
+		});
+	
+		socket.on('gameFull', (data) => {
+			setMessage("Game is already full. Unable to join.");
+			announceHelperMessage("Game is already full. Unable to join. Please select another game id");
+			setIsGameStarted(false);
+		});
 
         return () => {
             socket.off('waiting');
@@ -82,10 +100,19 @@ const App = () => {
     };
 	// RESET GAME
 	const resetGame = () => {
-        setBoard(Array(9).fill(null));
-        setIsGameStarted(false);
+		// PLAYER DETAILS
+		setGameId("1");
+		setPlayerName(playerName);
+		// GAME DETAILS
+		setIsGameStarted(false);
+		setIsWaiting(false);
+		setBoard(Array(9).fill(null));
+		setPlayerSymbol("");
+		setCurrentSymbol("X");
+		setWinner(null);
+		setDisconnect(false);
         setMessage("");
-		setWinner(null); 
+		setHelperMessage("");
     };
 
 	// HELPER FUNCTIONS FOR SCREEN READER
@@ -118,7 +145,8 @@ const App = () => {
     return (
         <div className="app-container">
             <h1>tic tac toe</h1>
-            {!isGameStarted && (
+			{/* GAME HAS NOT STARTED */}
+            {!isGameStarted ? (
                 <div className="content-container">
 					{isWaiting ? (
 						<div className="waiting-container">
@@ -170,8 +198,8 @@ const App = () => {
 						</div>
 					)}
                 </div>
-            )}
-            {isGameStarted && (
+			// GAME STARTED, OPPONENT ONLINE
+            ) : !disconnect ? (
                 <div className="game-container">
 					<div className="waiting-header">
 						<h5>Playing As : {playerName}</h5>
@@ -203,7 +231,18 @@ const App = () => {
                         ))}
                     </div>
                 </div>
-            )}
+			// GAME STARTED, OPPONENT DISCONNECTED
+            ) : (
+				<div className="reset-container">
+					<div className="app-helper-message-container">
+						<h4>{helperMessage}</h4>
+					</div>
+                    <button  className="reset-button" onClick={resetGame} aria-label="Start New Game">
+                        Start New Game
+                    </button>
+                </div>
+			)}
+			{/* GAME ENDED */}
 			{winner && (
                 <div className="reset-container">
                     <button  className="reset-button" onClick={resetGame} aria-label="Start New Game">

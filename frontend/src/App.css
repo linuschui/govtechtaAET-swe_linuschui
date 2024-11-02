@@ -166,6 +166,7 @@ input[type="text"] {
 }
 
 .reset-button {
+  margin-top: 20px;
   padding: 10px 20px;
   font-size: 12px;
   color: #ffffff;

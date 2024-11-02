@@ -45,7 +45,7 @@ const games = {};
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id}`);
 
-	// Listen for new players
+	// HANDLE NEW PLAYERS
 	socket.on('joinGame', ({ gameId, playerName }) => {
 		if (!games[gameId]) {
 			games[gameId] = {
@@ -80,7 +80,7 @@ io.on('connection', (socket) => {
 		socket.emit('playerSymbol', { symbol: game.players[game.players.length - 1].symbol });
 	});
 
-	// Handle player moves
+	// HANDLE PLAYER MOVES
 	socket.on('makeMove', ({ gameId, index }) => {
      	 const game = games[gameId];
 
@@ -105,7 +105,7 @@ io.on('connection', (socket) => {
 				io.to(gameId).emit('gameState', game);
 				io.to(gameId).emit('customMessage', { message: moveMessage });
 
-				// Check for win or tie
+				// check for win or tie
 				const winner = checkWinner(game.board);
 				if (winner || !game.board.includes(null)) {
 					io.to(gameId).emit('gameEnd', { winner: winner ? player.name : null });
@@ -117,20 +117,24 @@ io.on('connection', (socket) => {
       	}
   	});
 
-  	// Release connection
+  	// HANDLE DISCONNECT
   	socket.on('disconnect', () => {
     	console.log(`User disconnected: ${socket.id}`);
 		for (const gameId in games) {
-			const game = games[gameId];
-			game.players = game.players.filter(p => p.id !== socket.id);
-			if (game.players.length === 0) {
-				delete games[gameId];
-			}
-		}
+            const game = games[gameId];
+            const player = game.players.find(p => p.id === socket.id);
+            if (player) {
+                game.players = game.players.filter(p => p.id !== socket.id);
+                if (game.players.length === 1) {
+                    io.to(gameId).emit('opponentDisconnect', { message: "Your opponent has disconnected. Click on the button to start a new game" });
+					delete games[gameId];
+				}
+            }
+        }
   	});
 });
 
-// Helper function to check for winner
+// HELPER FUNCTION TO CHECK FOR WINNER
 const checkWinner = (board) => {
     const winningCombinations = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -145,7 +149,7 @@ const checkWinner = (board) => {
     return null;
 };
 
-// Helper function to map to readable positions 
+// HELPER FUNCTION TO GET READABLE POSITIONS 
 const getPositionFromIndex = (index) => {
     const positions = [
         "top left", "top middle", "top right",
