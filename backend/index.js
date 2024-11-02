@@ -17,21 +17,6 @@ app.use(cors({
     methods: ['GET', 'POST'],
     credentials: true,
 }));
-// DB
-const mysql = require("mysql2");
-const db = mysql.createConnection({
-	host: "localhost",
-	user: "root",
-	password: "t0023772d",
-	database: "tic_tac_toe",
-});
-db.connect((err) => {
-	if (err) {
-		console.error(`Error Connecting To MySQL : ${err}`);
-		return;
-	}
-	console.log("Connected to MySQL");
-});
 // SERVER
 const { Server } = require("socket.io")
 const http = require('http');
